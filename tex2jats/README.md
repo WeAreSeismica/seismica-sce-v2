@@ -1,13 +1,23 @@
 # TeX 2 JATS XML for Seismica
 
 ## Introduction
-There are two options to run the scripts. There's a docker-based setup that only requires installation of Docker and automatically manages all other dependencies. The other option is to install the dependencies and run the shell script that calls the python files to perform the conversions.
+There are two options to run the scripts. There's a devbox-based setup that only requires installation of devbox and automatically manages all other dependencies. The other option is to install the dependencies and run the shell script that calls the python files to perform the conversions.
 
 Follow the steps in the following order - 
-1. [Base Requirements for installation](#base-requirements)
-2. [Pre-conversion Requirements](#pre--conversion-requirements)
-3. Workflow [Docker Option](#workflow-option-1---using-docker) or [Dependencies Option](#workflow-option-2---installing-dependencies)
-4. [Post-conversion checks](#post--conversion-checks)
+- [TeX 2 JATS XML for Seismica](#tex-2-jats-xml-for-seismica)
+  - [Introduction](#introduction)
+  - [Base Requirements](#base-requirements)
+  - [Pre-conversion requirements](#pre-conversion-requirements)
+  - [Inital Setup](#inital-setup)
+    - [Option 1 - Installing Dependencies](#option-1---installing-dependencies)
+      - [Dependencies](#dependencies)
+    - [Option 2 - Using Devbox](#option-2---using-devbox)
+  - [Instructions](#instructions)
+  - [Post conversion checks](#post-conversion-checks)
+    - [Initial checks (with a text editor)](#initial-checks-with-a-text-editor)
+    - [Final checks (with the OJS preview tool)](#final-checks-with-the-ojs-preview-tool)
+    - [Known issues:](#known-issues)
+  - [TO DO](#to-do)
 
 ## Base Requirements
 1. Clone the github repo to your local machine. `cd` into the desired directory and clone using - 
@@ -24,45 +34,11 @@ Before running the TeX2JATS converter, you need to:
 `mogrify -verbose -quality 00 -density 250  -format png ./fig*.pdf`
 
 
-## Workflow Option 1 - Using Docker
-**Note - There is a new option for setup that we are exploring using [devbox](https://www.jetify.com/devbox). This will replace Docker while still providing an isolated and consistent environment. If you would like to try this option, please reach out to @abhineetgupta on Slack.**
+## Inital Setup
 
-1. Install [Docker](https://www.docker.com/) if you don't have it already.
+### Option 1 - Installing Dependencies
 
-1. Start up Docker. Usually you will have an application called "Docker" on your computer with a rudimentary graphical user interface (GUI). You can also run this command in the command-line interface (CLI):
-    ```
-    open -a Docker
-    ```
-
-1. Move the directory containing latex files to be converted into the git repo `tex2jats`.
-
-1. Open the file `env.set`, and edit the parameters in the file as mentioned there. Spaces in names are accepted.
-
-1. Open a shell and navigate to the wherever the git repo is cloned, which now includes the latex files directory.
-    ```
-    cd path/to/git/repo/tex2jats
-    ```
-    You can always run `pwd` to check whether you're in the right place.
-
-1. Run docker-compose by entering the below commands in your favorite shell.
-    ```
-    docker-compose up -d
-    ```
-
-1. This should convert and create all the necessary files. Conversion may take up to a minute. You can check the status of the conversion by using - 
-    ```
-    docker-compose logs
-    ```
-    Verify that there are `xml` files in the latex files directory. 
-
-1. Shut down docker-compose by entering - 
-    ```
-    docker-compose down
-    ```
-
-## Workflow Option 2 - Installing Dependencies
-
-### Dependencies
+#### Dependencies
 These ones are shared dependencies with the [docx/odt parsing for Seismica module](https://github.com/WeAreSeismica/seismica-sce):
 - python 3.n (preferably 3.8+)
 - numpy
@@ -75,7 +51,11 @@ Other dependencies:
 - GNU sed, v4.8
 - perl, v>5 (below not tested)
 
-### Option 2 Instructions
+### Option 2 - Using Devbox
+
+Follow the instructions in the top-level [README](../README.md) for devbox setup. No additional setup is needed for Latex to JATS conversion before following the below instructions.
+
+## Instructions
 1. Copy tex2xml.sh, apa.csl, and cleanjats.py to your current working directory (CWD, where the TeX galley is):  
 `cd /cwd/`  
 `cp /path/to/tex2jats/tex2xml.sh ./`  
