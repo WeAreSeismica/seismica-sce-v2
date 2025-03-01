@@ -41,9 +41,10 @@ Devbox uses NixOS to install dependencies. This allows modular installation of a
 
 1. Install [devbox](https://www.jetify.com/devbox) on your system.
 2. Start devbox shell using `devbox shell`. You do not need to run `devbox init` since it has already been initialized in the repo, and the files `devbox.json` and `devbox.lock` include the required dependencies. Spinning up the shell for the first time may take a while because all the dependecies will be installed on first run.
-3. Now from within the `devbox shell`, you can follow the below instructionsas if you had all the dependecies installed OS-wide.
-4. To exit back to the OS shell, just use `exit`. 
-5. To install new dependencies, go to the [NixOS Packages hub](https://www.nixhub.io), find the necessary package and install using `devbox add`.
+3. You may need to change the line `". $VENV_DIR/bin/activate.fish"` to match your [shell](https://docs.astral.sh/uv/pip/environments/#using-a-virtual-environment).
+4. Now from within the `devbox shell`, you can follow the below instructions if you had all the dependecies installed OS-wide.
+5. To exit back to the OS shell, just use `exit`. 
+6. To install new dependencies, go to the [NixOS Packages hub](https://www.nixhub.io), find the necessary package and install using `devbox add`.
 
 ## Common Workflows
 
