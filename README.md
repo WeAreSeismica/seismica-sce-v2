@@ -204,3 +204,5 @@ Note that the `-k` flag should be used for `bib` files provided by authors using
   - clean out enumerate stuff when word messes up the template
 1. tex2jats
   - correctly parse math expressions and references within table captions
+1. Both
+  - can we set something up to run all steps on a config file, consistent file names, so all you need to supply is the starting docx path, author name, refs plain text path?
