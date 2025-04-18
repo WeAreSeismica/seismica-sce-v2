@@ -97,17 +97,22 @@ if not args.nosearch:
                 entry['doi'] = entry['doi'][:-1]    # (this is sometimes an anystyle problem)
             doi = entry['doi']
             ourl = scu.make_doi_url(doi)
-            req = Request(ourl, headers=dict(Accept='application/x-bibtex'))
-            try:
-                bibtext = urlopen(req).read().decode('utf-8')
-            except HTTPError:
-                doi = None  # authors made a DOI mistake or anystyle messed up; try a search
+            if ourl != -999:  # -999 means we failed to find a doi in the doi field
+                req = Request(ourl, headers=dict(Accept='application/x-bibtex'))
+                try:
+                    bibtext = urlopen(req).read().decode('utf-8')
+                except HTTPError:
+                    doi = None  # authors made a DOI mistake or anystyle messed up; try a search
+            else:
+                doi = None
 
         # if url looks like a doi link and we don't have the doi already, try the url
         if 'url' in entry.keys() and re.search(r"doi\.org",entry['url']) and not doi:
-            req = Request(entry['url'], headers=dict(Accept='application/x-bibtex'))
+            testurl = scu.clean_url(entry['url'])
+            req = Request(testurl, headers=dict(Accept='application/x-bibtex'))
             try:
                 bibtext = urlopen(req).read().decode('utf-8')
+                doi = testurl  # this seems to have worked, use URL as the DOI
             except HTTPError:
                 doi = None  # url is not actually a good DOI link
 
@@ -146,61 +151,66 @@ if not args.nosearch:
                         doi = q0['doi']
 
         if doi:  # if doi not none, use to query for a clean citation
-            print('DOI provided/obtained, checking for cleaner citation into')
             ourl = scu.make_doi_url(doi)
-            req = Request(ourl, headers=dict(Accept='application/x-bibtex'))
-            try:
-                bibtext = urlopen(req).read().decode('utf-8')
+            if ourl != -999:  # -999 means what we thought was the doi is perhaps not it
+                print('DOI provided/obtained, checking for cleaner citation info')
+                print(doi)
+                req = Request(ourl, headers=dict(Accept='application/x-bibtex'))
+                try:
+                    bibtext = urlopen(req).read().decode('utf-8')
 
-                # parse bibtex to an Entry and check to make sure all the main pieces are there
-                # we need this bc some metadata deposited with DOIs is imperfect in weird ways
-                parser = bbl.Parser()  # need a new parser every time which is annoying
-                parsed = parser.parse(bibtext)
-                key0 = list(parsed.get_entries().keys())[0]
-                entry_new = parsed.get_entries()[key0]  # keyed based on doi.org convention
+                    # parse bibtex to an Entry and check to make sure all the main pieces are there
+                    # we need this bc some metadata deposited with DOIs is imperfect in weird ways
+                    parser = bbl.Parser()  # need a new parser every time which is annoying
+                    parsed = parser.parse(bibtext)
+                    key0 = list(parsed.get_entries().keys())[0]
+                    entry_new = parsed.get_entries()[key0]  # keyed based on doi.org convention
 
-                # see if we need to fix/un-replace authors or titles
-                # this is a kind of patch for dealing with the odd formatting (tex escaping,
-                # html escaping) that occastionally shows up in the doi.org bibtex entries
-                rereparse = False
-                # first check if there are author list inconsistencies, see if we want old or new list
-                if 'author' in entry_new.keys() and 'author' in entry.keys():
-                    if len(entry.authors()) != len(entry_new.authors()): #or \
-                            #re.search(r'[^\.a-zA-Z, -]',entry_new['author']):  # TODO this needs work - say which criterion was hit
-                        print('\nchecking '+entry.key+' author list: ')
-                        print('old: %s' % entry['author'])
-                        print('new: %s' % entry_new['author'])
-                        ika = input('keep (o)ld or [n]ew? >> ') or 'n'
-                        if ika == 'o':
-                            entry_new['author'] = entry['author']
-                            rereparse = True
-                elif 'author' not in entry_new.keys() and 'author' in entry.keys():  # avoid losing info
-                    entry_new['author'] = entry['author']
-                    rereparse = True
+                    # see if we need to fix/un-replace authors or titles
+                    # this is a kind of patch for dealing with the odd formatting (tex escaping,
+                    # html escaping) that occastionally shows up in the doi.org bibtex entries
+                    rereparse = False
+                    # first check if there are author list inconsistencies, see if we want old or new list
+                    if 'author' in entry_new.keys() and 'author' in entry.keys():
+                        if len(entry.authors()) != len(entry_new.authors()): #or \
+                                #re.search(r'[^\.a-zA-Z, -]',entry_new['author']):  # TODO this needs work - say which criterion was hit
+                            print('\nchecking '+entry.key+' author list: ')
+                            print('old: %s' % entry['author'])
+                            print('new: %s' % entry_new['author'])
+                            ika = input('keep (o)ld or [n]ew? >> ') or 'n'
+                            if ika == 'o':
+                                entry_new['author'] = entry['author']
+                                rereparse = True
+                    elif 'author' not in entry_new.keys() and 'author' in entry.keys():  # avoid losing info
+                        entry_new['author'] = entry['author']
+                        rereparse = True
 
-                # next check if there are title inconsistencies (easier to check tbh)
-                if 'title' in entry_new.keys() and 'title' in entry.keys():
-                    if entry['title'].lower() != entry_new['title'].lower():  # case is not as important
-                        print('\nchecking '+entry.key+' title: ')
-                        print('old: %s' % entry['title'])
-                        print('new: %s' % entry_new['title'])
-                        ikt = input('keep (o)ld or [n]ew? >> ') or 'n'
-                        if ikt == 'o':
-                            entry_new['title'] = entry['title']
-                            rereparse = True
-                elif 'title' not in entry_new.keys() and 'title' in entry.keys():
-                    entry_new['title'] = entry['title']
-                    rereparse = True
+                    # next check if there are title inconsistencies (easier to check tbh)
+                    if 'title' in entry_new.keys() and 'title' in entry.keys():
+                        if entry['title'].lower() != entry_new['title'].lower():  # case is not as important
+                            print('\nchecking '+entry.key+' title: ')
+                            print('old: %s' % entry['title'])
+                            print('new: %s' % entry_new['title'])
+                            ikt = input('keep (o)ld or [n]ew? >> ') or 'n'
+                            if ikt == 'o':
+                                entry_new['title'] = entry['title']
+                                rereparse = True
+                    elif 'title' not in entry_new.keys() and 'title' in entry.keys():
+                        entry_new['title'] = entry['title']
+                        rereparse = True
 
-                if rereparse:  # info has been re-added, re-parse to reset field_pos
-                    parser = bbl.Parser()
-                    parsed = parser.parse(entry_new.to_bib())
-                    entry_new = parsed.get_entries()[key0]
+                    if rereparse:  # info has been re-added, re-parse to reset field_pos
+                        parser = bbl.Parser()
+                        parsed = parser.parse(entry_new.to_bib())
+                        entry_new = parsed.get_entries()[key0]
 
-            except InputError:     # crossref returned text that biblib doesn't like to parse
-                entry_new = entry  # keep whatever the initial entry was
-            except HTTPError:      # this is some kind of crossref issue, maybe a bad DOI
-                entry_new = entry
+                except InputError:     # crossref returned text that biblib doesn't like to parse
+                    entry_new = entry  # keep whatever the initial entry was
+                except HTTPError:      # this is some kind of crossref issue, maybe a bad DOI
+                    entry_new = entry
+            else:
+                print('whatever we thought was a DOI seems to have failed')
+                entry_new = entry  # our potential doi was not a doi (ourl -999)
                             
         else:  # no doi, from authors or from crossref
             entry_new = entry  # keep whatever the initial entry was

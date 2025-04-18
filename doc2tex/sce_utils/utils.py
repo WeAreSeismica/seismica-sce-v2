@@ -847,11 +847,26 @@ def make_doi_url(doi,root='https://dx.doi.org/'):
     """
     if doi.lstrip().lower().startswith('doi:'):
         doi = doi.lstrip()[4:].lstrip()  # get rid of any doi: 10.etc syntax (old style)
+    # check if doi has URL components already and trim them if so
+    if re.search(r"doi\.org",doi):
+        span = re.search(r"doi.org",doi).span()
+        doi = doi[span[1]+1:]
+    # check if what remains of the input doi matches the form we think it should
+    if not re.match(r"10.[0-9.]{4,10}/(.*)",doi):  # 4-10 for prefix length should be ok???
+        return -999
     if '. ' in doi:
-        ourl = "https://dx.doi.org/"+doi[0:doi.find('. ')]
+        ourl = root+doi[0:doi.find('. ')]
     else:
-        ourl = "https://dx.doi.org/"+doi
+        ourl = root+doi
     return ourl
+
+def clean_url(url):
+    """ Clean up a URL that might or might not be a doi
+    """
+    url = url.strip()  # no leading or trailing spaces
+    if url.endswith('.'):
+        url = url.rstrip('.')
+    return url
 
 
 ########################################################################
