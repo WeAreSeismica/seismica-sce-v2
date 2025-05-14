@@ -13,7 +13,7 @@ This repo provides all the Seismica SCE tools, which were previously provided ac
 - numpy
 - [habanero](https://habanero.readthedocs.io/)
 - [dateutil](https://dateutil.readthedocs.io/en/stable/)
-- [biblib](https://github.com/WeAreSeismica/biblib) (NOT from conda or pip)
+- [biblib](https://github.com/WeAreSeismica/biblib) (this is a specific Seismica version on github)
 - [beautifulsoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/) (+ lmxl parser on MacOS)
 - [pandoc](https://pandoc.org/)
 - [anystyle](https://github.com/inukshuk/anystyle) or a web browser to access [anystyle.io](anystyle.io)
@@ -34,11 +34,12 @@ conda create -n seismica numpy habanero python-dateutil
 cd /path/to/put/biblib/files
 git clone git@github.com:WeAreSeismica/biblib.git
 conda activate seismica
-pip install /path/to/put/biblib/files/biblib
+cd biblib
+pip install .
 pip install beautifulsoup4
 ```
 
-Note that biblib is not available through conda or PyPI (the one available from PyPI is not the same module), though it can be installed in a conda env by using pip with the downloaded source code. We use a fork of the original source code that has been updated for compatibility with Python 3.10+.
+Note that the biblib we use is not available through the conda or PyPI package repositories (the one available from PyPI is not the same module), though it can be installed in a conda env by using pip with the downloaded source code.
 
 Once your dependencies are set up, clone this github repo to your local machine. `cd` into your desired directory and run:
 ```
