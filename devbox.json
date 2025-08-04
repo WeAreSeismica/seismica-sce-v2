@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.14.0/.schema/devbox.schema.json",
+  "env": {
+    "UV_PYTHON": "$VENV_DIR/bin/python"
+  },
+  "packages": {
+    "git": "latest",
+    "ruby": "latest",
+    "python": "3.13.1",
+    "pandoc": "3.1.11.1",
+    "uv": "0.5.18"
+  },
+  "shell": {
+    "init_hook": [
+      "gem install anystyle-cli",
+      ". $VENV_DIR/bin/activate.fish",
+      "uv pip install beautifulsoup4 habanero lxml numpy python-dateutil git+https://github.com/WeAreSeismica/biblib.git",
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {
+      "test": [
+        "echo \"Error: no test specified\" && exit 1"
+      ]
+    }
+  }
+}
