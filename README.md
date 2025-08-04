@@ -107,13 +107,13 @@ Refer to the [Readme](tex2jats/README.md) in the `tex2jats` directory.
   a. get nice citations from doi.org when we do have dois
   a. neaten up all bibtex entries (date/year, pages, url)
   
-      ```python
+      ```bash
       python3 -m fix_bibtex --ifile refs.bib --ofile refs_better.bib
       ```
 
 1. Check a bibtex file against a `tex` file and clean out any unused references in the `bib` file
   
-      ```
+      ```bash
       python3 clean_bibfile.py -b best_bibfile.bib -t copyedited_texfile.tex [-n excess_entries.bib]
       ```
 
