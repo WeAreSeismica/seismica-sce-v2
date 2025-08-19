@@ -84,7 +84,7 @@ if strp_last:  # remove trailing character if set to do so
 
 if not args.nosearch:
     # connection for querying, being polite for server priority
-    cr = Crossref(mailto="tech@seismica.org",ua_string='Seismica SCE, seismica.org')  
+    cr = Crossref(mailto="tech@seismica.org",ua_string='Seismica SCE, seismica.org', timeout=15)  
 
     bib_new = OrderedDict()         # to save entries with DOIs added
 
@@ -120,14 +120,20 @@ if not args.nosearch:
             print('no DOI, querying crossref to try and find one')
             try:
                 q = cr.works(query_bibliographic=entry['title'],query_author=entry['author'],\
-                            limit=2,select='DOI,title,author,score,type,published',sort='score')
-            except HTTPError:  # shouldn't happen, but if it does anyway we give up on this one
+                            limit=2,select='DOI,title,author,score,type,published',sort='score', warn=True)
+            except HTTPError as http_error:  # shouldn't happen, but if it does anyway we give up on this one
+                print(f'crossref query failed due to below error, skipping entry {key}')
+                print(http_error)
                 continue
             except bbl.FieldError:  # probably no 'author' - might be 'editor'
                 # in this (pretty edge) case, just keep the entry as is and move on
                 entry_new = entry  # keep whatever the initial entry was
                 entry_new.key = key         # keep the input key for now
                 bib_new[key] = entry_new    # as that should be unique, even from anystyle (a/b etc)
+                continue
+            except Exception as e:  # catch any other exceptions
+                print(f'crossref query failed due to below error, skipping entry {key}')
+                print(e)
                 continue
             if q['message']['total-results'] > 0:  # TODO deal with case where exactly 1 result
                 q0 = scu.format_crossref_query(q, i=0)
