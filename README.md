@@ -11,7 +11,7 @@ This repo provides all the Seismica SCE tools, which were previously provided ac
 ### Dependencies:
 - python 3.n (preferably 3.8+)
 - numpy
-- [habanero](https://habanero.readthedocs.io/)
+- [habanero](https://habanero.readthedocs.io/) >= 2.0.0
 - [dateutil](https://dateutil.readthedocs.io/en/stable/)
 - [biblib](https://github.com/WeAreSeismica/biblib) (this is a specific Seismica version on github)
 - [beautifulsoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/) (+ lmxl parser on MacOS)
