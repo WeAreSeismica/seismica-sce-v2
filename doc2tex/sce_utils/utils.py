@@ -817,7 +817,10 @@ def format_crossref_query(q, ret=["authors", "title", "doi", "score", "type", "s
     that is returned from a crossref query via habanero
     """
     out = {}
-    qi = q["message"]["items"][i]
+    try:
+        qi = q["message"]["items"][i]
+    except IndexError:
+        return None
     if "title" in ret and "title" in qi.keys():
         out["title"] = qi["title"][0]
     if "doi" in ret and "DOI" in qi.keys():
@@ -851,16 +854,19 @@ def print_query_options(q0, i=0):
         this should usually be a good assumption? but could make more robust to keys
         if it turns out to be an issue
     """
-    print(
-        "received:\n\ttitle: %s\n\tby: %s\n\tdoi: %s\n\tscore: %.2f"
-        % (q0["title"], q0["auths"], q0["doi"], q0["score"])
-    )
-    if "pdate" in q0.keys():
-        print("\tyear: %i" % q0["pdate"].year)
-    if "type" in q0.keys():
-        print("\ttype: %s" % q0["type"])
-    if "subtype" in q0.keys():
-        print("\tsubtype: %s" % q0["subtype"])
+    if q0:
+        print(
+            "received:\n\ttitle: %s\n\tby: %s\n\tdoi: %s\n\tscore: %.2f"
+            % (q0["title"], q0["auths"], q0["doi"], q0["score"])
+        )
+        if "pdate" in q0.keys():
+            print("\tyear: %i" % q0["pdate"].year)
+        if "type" in q0.keys():
+            print("\ttype: %s" % q0["type"])
+        if "subtype" in q0.keys():
+            print("\tsubtype: %s" % q0["subtype"])
+    else:
+        print('index error :(')
     if i == 0:
         iok = input("accept this [y], reject query (n), or see next match (p): ") or "y"
     else:
