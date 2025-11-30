@@ -119,6 +119,18 @@ if not args.nosearch:
             except HTTPError:
                 doi = None  # url is not actually a good DOI link
 
+        if "note" in entry.keys() and not doi and re.search(r"doi", entry["note"].lower()):
+            pieces = re.split(r'[:\s]+',entry["note"])  # split by ~ and : just in case
+            for p in pieces:
+                if len(p.strip()) > 10:  # at least 10.????/??
+                    ourl = scu.make_doi_url(p.strip())
+                    req = Request(ourl, headers=dict(Accept="application/x-bibtex"))
+                    try:
+                        bibtext = urlopen(req).read().decode("utf-8")
+                        doi = ourl  # this seems to have worked, use URL as the DOI
+                    except HTTPError:
+                        doi = None  # url is not actually a good DOI link
+
         if not doi:  # try querying crossref to get a doi
             print("no DOI, querying crossref to try and find one")
             try:
