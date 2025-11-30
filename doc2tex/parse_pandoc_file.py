@@ -330,7 +330,7 @@ while not goto_end:
             goto_end = True
         else:
             # check if there *is* a leading number
-            lead_num = line.split("{")[1].split("}")[0].strip()[0]
+            lead_num = line.split("{")[1].split("}")[0].strip()
             if lead_num.isdigit():
                 sname = " ".join(line.split("{")[1].split("}")[0].split(" ")[1:])  # strip leading number
         if sname != "" and not goto_end:
