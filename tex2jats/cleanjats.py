@@ -11,9 +11,10 @@ from datetime import datetime
 
 locale.setlocale(locale.LC_TIME, "en_US.UTF-8")
 from pathlib import Path
-
+from bs4 import XMLParsedAsHTMLWarning
 from bs4 import BeautifulSoup, CData, NavigableString
-
+import warnings
+warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 def sepbib(texname):
     xmlname = texname
@@ -630,7 +631,7 @@ def table2jats(texname):
 
     boxed_txt = [x for x in soup.find_all("boxed-text") if x.find("table-wrap")]
     for p in boxed_txt:
-        p.replaceWithChildren()
+        p.unwrap()
 
     for index, p in enumerate(soup.find_all("table-wrap")):
         p["id"] = labels[index]
@@ -777,7 +778,7 @@ def cleanbibentries(bibname, xmlname):
     with open(bibname + ".xml") as fi:
         xml = fi.read()
 
-    soup = BeautifulSoup(xml, "xml")
+    soup = BeautifulSoup(xml, "html.parser")
 
     for p in soup.find_all("ref"):
         src = p.find("source")
@@ -796,7 +797,7 @@ def cleanbibentries(bibname, xmlname):
             elif uri is None and source is not None:
                 pass
             else:
-                print("\n There might be information missing for this bibliography entry:")
+                print("\n \n >> There might be information missing for this bibliography entry:")
                 print(p)
 
     for p in soup.find_all("element-citation", attrs={"publication-type": None}):
@@ -820,7 +821,7 @@ def cleanbibentries(bibname, xmlname):
                 # newtag.insert(0, NavigableString(uri.text) )
 
             elif uri is None and doi is None:
-                print("There might be information missing for this bibliography entry:")
+                print("\n \n >> There might be information missing for this bibliography entry:")
                 print(p)
         else:
             if uri is not None:
