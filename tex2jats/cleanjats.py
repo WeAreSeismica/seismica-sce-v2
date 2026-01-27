@@ -14,6 +14,7 @@ from pathlib import Path
 from bs4 import XMLParsedAsHTMLWarning
 from bs4 import BeautifulSoup, CData, NavigableString
 import warnings
+import html
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 def sepbib(texname):
@@ -662,6 +663,54 @@ def table2jats(texname):
             p["alt"] = str(alt)
             p["ref-type"] = "table"
             p.string.replace_with(str(alt))
+            
+    ## Check for references in caption and clean (get authors names from the key, no link with the bib file)
+    refs_reg = re.compile(r'\\(cite|citep|citet)\{([^}]+)\}')
+
+    def parse_key(key):
+        for pat, fmt in [
+            (r'([A-Z][a-z]+)EA(\d{4})', "{0} et al.|{1}"),
+            (r'([A-Z][a-z]+)([A-Z][a-z]+)(\d{4})', "{0} & {1}|{2}"),
+            (r'([A-Z][a-z]+).*?(\d{4})', "{0}|{1}")
+        ]:
+            m = re.match(pat, key)
+            if m:
+                a, y = fmt.format(*m.groups()).split("|")
+                return a, y
+        return key, "n.d."
+
+    def xref(soup, key, text):
+        tag = soup.new_tag("xref", **{"ref-type": "bibr", "rid": f"ref-{key}", "alt": text})
+        tag.string = text
+        return tag
+
+    def replace_cites(node, soup):
+        s = str(node)
+        parts, last = [], 0
+        for m in refs_reg.finditer(s):
+            parts.append(s[last:m.start()])
+            cmd, keys = m.groups()
+            keys = [k.strip() for k in keys.split(",")]
+            for i, key in enumerate(keys):
+                a, y = parse_key(key)
+                if cmd == "citet":
+                    if i == 0: parts.append(f"{a} (")
+                    parts.append(xref(soup, key, y))
+                    parts.append(")" if i == len(keys)-1 else "; ")
+                else:
+                    if cmd == "citep" and i == 0: parts.append("(")
+                    txt = f"{a}, {y}"
+                    parts.append(xref(soup, key, txt))
+                    parts.append(")" if cmd == "citep" and i == len(keys)-1 else "; " if i < len(keys)-1 else "")
+            last = m.end()
+        parts.append(s[last:])
+        if len(parts) > 1:
+            node.replace_with(*[soup.new_string(p) if isinstance(p, str) else p for p in parts])
+
+    for tag in soup.find_all(["caption", "table-wrap"]):
+        for t in list(tag.descendants):
+            if isinstance(t, NavigableString):
+                replace_cites(t, soup)
 
     ## output to XML file
     with open(xmlname + ".xml", "w", encoding="utf-8") as fi:
@@ -747,8 +796,53 @@ def cleanmathjats(xmlname, mathmode):
             if "false" not in mathmode:
                 p.append(mmltag)
             p.alternatives.decompose()
+            
+    ## correct for incorrectly parsed symbols: < or > or else
+    latex_map = {
+        ">": r"\gt",
+        "<": r"\lt",
+        "≥": r"\ge",
+        "≤": r"\le",
+        "≠": r"\ne",
+        "×": r"\times",
+        "±": r"\pm",
+        "α": r"\alpha",
+        "β": r"\beta",
+        "γ": r"\gamma",
+    }
 
-    # correct Xrefs
+    # also catch named and numeric entities if still present
+    entity_map = {
+        "&gt;": r"\gt", "&#62;": r"\gt",
+        "&lt;": r"\lt", "&#60;": r"\lt",
+        "&ge;": r"\ge",
+        "&le;": r"\le",
+        "&ne;": r"\ne",
+        "&times;": r"\times",
+        "&pm;": r"\pm",
+    }
+
+    def fix_math(text):
+        # first unescape any remaining entities
+        text = html.unescape(text)
+
+        # replace literal unicode symbols
+        for k, v in latex_map.items():
+            text = text.replace(k, v)
+
+        # just in case, replace leftover entities
+        for k, v in entity_map.items():
+            text = text.replace(k, v)
+
+        return text
+    
+    for tex in soup.find_all("tex-math"):
+        if tex.string:
+            fixed = fix_math(tex.string)
+            tex.clear()
+            tex.append(CData(fixed)) 
+
+    ## correct Xrefs
     for rid in ids:
         for p in soup.find_all("xref", attrs={"rid": rid}):
             alt = ids.index(p["rid"]) + 1
