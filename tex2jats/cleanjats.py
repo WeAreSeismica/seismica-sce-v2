@@ -14,6 +14,7 @@ from pathlib import Path
 from bs4 import XMLParsedAsHTMLWarning
 from bs4 import BeautifulSoup, CData, NavigableString
 import warnings
+import html
 warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
 def sepbib(texname):
@@ -747,8 +748,61 @@ def cleanmathjats(xmlname, mathmode):
             if "false" not in mathmode:
                 p.append(mmltag)
             p.alternatives.decompose()
+            
+    ## correct for incorrectly parsed symbols: < or > or else
+    latex_map = {
+        ">": r"\gt",
+        "<": r"\lt",
+        "≥": r"\ge",
+        "≤": r"\le",
+        "≠": r"\ne",
+        "×": r"\times",
+        "±": r"\pm",
+        "α": r"\alpha",
+        "β": r"\beta",
+        "γ": r"\gamma",
+    }
 
-    # correct Xrefs
+    # also catch named and numeric entities if still present
+    entity_map = {
+        "&gt;": r"\gt", "&#62;": r"\gt",
+        "&lt;": r"\lt", "&#60;": r"\lt",
+        "&ge;": r"\ge",
+        "&le;": r"\le",
+        "&ne;": r"\ne",
+        "&times;": r"\times",
+        "&pm;": r"\pm",
+    }
+
+    def fix_math(text):
+        # first unescape any remaining entities
+        text = html.unescape(text)
+
+        # replace literal unicode symbols
+        for k, v in latex_map.items():
+            text = text.replace(k, v)
+
+        # just in case, replace leftover entities
+        for k, v in entity_map.items():
+            text = text.replace(k, v)
+
+        return text
+
+    # inline formulas
+    for p in soup.find_all("inline-formula"):
+        tex = p.find("alternatives")
+        if tex:
+            tex = tex.find("tex-math")
+            if tex and tex.string:
+                tex.string.replace_with(fix_math(tex.string))
+
+    # display formulas
+    for p in soup.find_all("disp-formula"):
+        tex = p.find("tex-math")
+        if tex and tex.string:
+            tex.string.replace_with(fix_math(tex.string))
+
+    ## correct Xrefs
     for rid in ids:
         for p in soup.find_all("xref", attrs={"rid": rid}):
             alt = ids.index(p["rid"]) + 1
