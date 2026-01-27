@@ -835,20 +835,12 @@ def cleanmathjats(xmlname, mathmode):
             text = text.replace(k, v)
 
         return text
-
-    # inline formulas
-    for p in soup.find_all("inline-formula"):
-        tex = p.find("alternatives")
-        if tex:
-            tex = tex.find("tex-math")
-            if tex and tex.string:
-                tex.string.replace_with(fix_math(tex.string))
-
-    # display formulas
-    for p in soup.find_all("disp-formula"):
-        tex = p.find("tex-math")
-        if tex and tex.string:
-            tex.string.replace_with(fix_math(tex.string))
+    
+    for tex in soup.find_all("tex-math"):
+        if tex.string:
+            fixed = fix_math(tex.string)
+            tex.clear()
+            tex.append(CData(fixed)) 
 
     ## correct Xrefs
     for rid in ids:
