@@ -8,7 +8,6 @@ math=${3:-false}
 cp $1.tex $1_copy.tex
 sed -i.bak 's/figure\*/figure/g' $1_copy.tex
 sed -i.bak 's/\\makeseistitle{/\\makeseistitle\n{%/g' $1_copy.tex
-sed -i.bak 's/seistable/tabular/g' $1_copy.tex
 sed -i.bak 's/\\begin{acknowledgements}/\\begin{acknowledgements}Acknowledgements/g' $1_copy.tex
 # Clean inline code: replace '\code{...}' with '{...}' in the .tex file
 perl -i.bak -00pe 's/\\code\{(.*?)\}/\{$1\}/ig' $1_copy.tex
