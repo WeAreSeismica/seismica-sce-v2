@@ -3,6 +3,7 @@ import re
 import sys
 from argparse import ArgumentParser
 from collections import OrderedDict
+import sce_utils.utils as scu
 
 import biblib.bib as bbl
 import numpy as np
@@ -34,21 +35,16 @@ if os.path.isfile(args.nahfile):
 if os.path.isfile(o_clean):
     input("%s already exists and will be overwritten [hit enter to continue]" % o_clean)
 
+# basic check: duplicate bibkeys and items that biblib can't parse
+thing,reason = scu.super_basic_bibcheck(in_bib)
+if reason != 'all clear':
+    print(reason,': ',thing)
+    sys.exit()
+
 f = open(in_bib, "r")
 text = f.read()
 f.close()
-
 items = text.split("@")[1:]
-
-# check for duplicate keys:
-keys = [i.split("{")[1].split("\n")[0] for i in items]
-
-un, counts = np.unique(keys, return_counts=True)
-if np.any(counts > 1):
-    print("duplicated keys found:")
-    for k in un[counts > 1]:
-        print(k)
-    sys.exit()
 
 bib_used = OrderedDict()  # for the entries that *should* be in the file
 bib_rogue = OrderedDict()  # for the entries that are not referenced in the tex
@@ -68,17 +64,12 @@ cks = [e.lstrip().rstrip() for e in cks]
 # loop items in bibfile and see if the key is in the tex file
 for bibitem in items:
     parser = bbl.Parser()
-    try:
-        q = parser.parse("@" + bibitem)
-        key = list(q.get_entries().keys())[0]
-        if key in cks:
-            bib_used[key] = q.get_entries()[key]
-        else:
-            bib_rogue[key] = q.get_entries()[key]
-    except:  # if we catch something here, it means there is a badly formed entry in the bib file
-        print(bibitem)
-        print("check your commas, brackets, parens, keys, etc")
-        sys.exit()
+    q = parser.parse("@" + bibitem)
+    key = list(q.get_entries().keys())[0]
+    if key in cks:
+        bib_used[key] = q.get_entries()[key]
+    else:
+        bib_rogue[key] = q.get_entries()[key]
 
 
 # write things out

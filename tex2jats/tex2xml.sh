@@ -8,7 +8,6 @@ math=${3:-false}
 cp $1.tex $1_copy.tex
 sed -i.bak 's/figure\*/figure/g' $1_copy.tex
 sed -i.bak 's/\\makeseistitle{/\\makeseistitle\n{%/g' $1_copy.tex
-sed -i.bak 's/seistable/tabular/g' $1_copy.tex
 sed -i.bak 's/\\begin{acknowledgements}/\\begin{acknowledgements}Acknowledgements/g' $1_copy.tex
 # Clean inline code: replace '\code{...}' with '{...}' in the .tex file
 perl -i.bak -00pe 's/\\code\{(.*?)\}/\{$1\}/ig' $1_copy.tex
@@ -46,6 +45,8 @@ perl -i.bak -00pe 's/<boxed-text>\n\s*<boxed-text>/<boxed-text>/g' $1_galley.xml
 perl -i.bak -00pe 's/<\/boxed-text>\n\s*<\/boxed-text>/<\/boxed-text>/g' $1_galley.xml
 # Make the first word of the abstract bold
 perl -i.bak -00pe 's/<boxed-text>[\n\t ]*?<p>(Non-technical summary|\S{5,25}) ([\S\d\n\t ]*?)<\/p>[\n\t ]*?<\/boxed-text>/<boxed-text><p>\n <bold>$1.<\/bold> $2\n<\/p><\/boxed-text>/gmi' $1_galley.xml
+# Replace the article XML preamble
+perl -i.bak -00pe 's/\<article [\S ]*?\>/<article xmlns:xlink="http:\/\/www.w3.org\/1999\/xlink" xml:lang="en" xmlns:mml="http:\/\/www.w3.org\/1998\/Math\/MathML" xmlns:xsi="http:\/\/www.w3.org\/2001\/XMLSchema-instance">/gmi' $1_galley.xml
 # Clean all sed backup files
 rm -rf $1_metadata.xml.bak
 rm -rf $1_credits.xml.bak

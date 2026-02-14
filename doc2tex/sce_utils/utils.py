@@ -904,6 +904,31 @@ def clean_url(url):
         url = url.rstrip(".")
     return url
 
+def super_basic_bibcheck(ifile):
+    """For bibfiles that biblib can't parse, check entries from plain text
+    and try to find the problem item(s)"""
+    import biblib.bib as bbl
+
+    f = open(ifile,'r')  # read the whole thing
+    text = f.read()
+    f.close()
+
+    items = text.split('@')[1:]
+    for bibitem in items:
+        parser = bbl.Parser()
+        try:
+            parser.parse('@'+bibitem)
+        except:
+            return bibitem,'unparseable'
+
+    # if we get through parsing each individually, check for duplicate keys
+    keys = [i.split('{')[1].split('\n')[0] for i in items]
+    un,counts = np.unique(keys,return_counts=True)
+    if np.any(counts > 1):
+        return un[counts>1],'duplicates'
+
+    return 1, 'all clear'
+
 
 ########################################################################
 # tex escaping for python

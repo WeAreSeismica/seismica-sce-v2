@@ -57,7 +57,14 @@ if os.path.isfile(out_bib):
 ########################################################################
 
 parser = bbl.Parser()  # parser for bibtex
-parsed = parser.parse(open(in_bib, "r"))  # parse the input file with biblib
+try:
+    parsed = parser.parse(open(in_bib, "r"))  # parse the input file with biblib
+except:
+    # basic check: duplicate bibkeys and items that biblib can't parse
+    thing,reason = scu.super_basic_bibcheck(in_bib)
+    if reason != 'all clear':
+        print(reason,': ',thing)
+        sys.exit()
 # get entries
 bib_OD = parsed.get_entries()  # returns collections.OrderedDict
 
@@ -124,12 +131,13 @@ if not args.nosearch:
             for p in pieces:
                 if len(p.strip()) > 10:  # at least 10.????/??
                     ourl = scu.make_doi_url(p.strip())
-                    req = Request(ourl, headers=dict(Accept="application/x-bibtex"))
-                    try:
-                        bibtext = urlopen(req).read().decode("utf-8")
-                        doi = ourl  # this seems to have worked, use URL as the DOI
-                    except HTTPError:
-                        doi = None  # url is not actually a good DOI link
+                    if ourl != -999:
+                        req = Request(ourl, headers=dict(Accept="application/x-bibtex"))
+                        try:
+                            bibtext = urlopen(req).read().decode("utf-8")
+                            doi = ourl  # this seems to have worked, use URL as the DOI
+                        except HTTPError:
+                            doi = None  # url is not actually a good DOI link
 
         if not doi:  # try querying crossref to get a doi
             print("no DOI, querying crossref to try and find one")
