@@ -152,7 +152,7 @@ affils = {}  # read affiliations that go with those superscripts
 while True:
     line = ftex_in.readline()
     if line.startswith(r"\textsuperscript"):  # is an affiliation
-        groups = re.findall(r"\\textsuperscript{([0-9*]{1,2})}(.*)", line)
+        groups = re.findall(r"\\textsuperscript{([1-9*]{1,2})}(.*)", line)
         sp = groups[0][0]
         pl = groups[0][1].strip()
         try:
@@ -330,7 +330,7 @@ while not goto_end:
             goto_end = True
         else:
             # check if there *is* a leading number
-            lead_num = line.split("{")[1].split("}")[0].strip()[0]
+            lead_num = line.split("{")[1].split("}")[0].strip()
             if lead_num.isdigit():
                 sname = " ".join(line.split("{")[1].split("}")[0].split(" ")[1:])  # strip leading number
         if sname != "" and not goto_end:

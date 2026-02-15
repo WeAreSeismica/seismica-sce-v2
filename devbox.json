@@ -1,0 +1,24 @@
+{
+  "env": {
+    "UV_PYTHON": "$VENV_DIR/bin/python"
+  },
+  "packages": {
+    "git": "latest",
+    "ruby": "latest",
+    "python": "3.13",
+    "pandoc": "3.1.11",
+    "uv": "latest"
+  },
+  "shell": {
+    "init_hook": [
+      "gem install anystyle-cli",
+      ". $VENV_DIR/bin/activate",
+      "uv pip install beautifulsoup4 black habanero isort lxml numpy python-dateutil git+https://github.com/WeAreSeismica/biblib.git",
+      "echo 'Welcome to devbox!' > /dev/null"
+    ],
+    "scripts": {
+      "test": ["echo \"Error: no test specified\" && exit 1"],
+      "format": ["isort .", "black --line-length 120 ."]
+    }
+  }
+}

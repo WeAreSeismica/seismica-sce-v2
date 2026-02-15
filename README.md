@@ -47,7 +47,16 @@ git clone https://github.com/WeAreSeismica/seismica-sce-v2.git
 ```
 
 ### Alternative setup - using Devbox
-Alternatively, you can use [devbox](https://www.jetify.com/devbox). This replaces the previous Docker setup while maintaining its benefits - providing an isolated and consistent environment - and without the virtualization overhead. If you would like to try this option, please use branch - [devbox](https://github.com/WeAreSeismica/seismica-sce-v2/tree/devbox), since the option is still experimental. Reach out to @abhineetgupta on Slack for any issues and questions.
+Alternatively, you can use [devbox](https://www.jetify.com/devbox). This replaces the previous Docker setup while maintaining its benefits - providing an isolated and consistent environment - and without the virtualization overhead. Reach out to @abhineetgupta on Slack for any issues and questions.
+
+Devbox uses NixOS to install dependencies. This allows modular installation of all dependencies so each repo (or directory) can use its own set of tooling that is independent of the system-wide tooling. As a result, you don't have to worry about breaking changes if you make changes elsewhere in your OS or even change devices. The versions will remain locked within a repo.
+
+1. Install [devbox](https://www.jetify.com/devbox) on your system.
+2. Start devbox shell using `devbox shell`. You do not need to run `devbox init` since it has already been initialized in the repo, and the files `devbox.json` and `devbox.lock` include the required dependencies. Spinning up the shell for the first time may take a while because all the dependecies will be installed on first run.
+3. You may need to change the line `". $VENV_DIR/bin/activate.fish"` to match your [shell](https://docs.astral.sh/uv/pip/environments/#using-a-virtual-environment).
+4. Now from within the `devbox shell`, you can follow the below instructions if you had all the dependecies installed OS-wide.
+5. To exit back to the OS shell, just use `exit`. 
+6. To install new dependencies, go to the [NixOS Packages hub](https://www.nixhub.io), find the necessary package and install using `devbox add`.
 
 ## Workflows
 
@@ -190,7 +199,7 @@ Note that the `-k` flag should be used for `bib` files provided by authors using
 
 1. Check a bibtex file against a `tex` file and clean out any unused references in the `bib` file
   
-      ```
+      ```bash
       python3 clean_bibfile.py -b best_bibfile.bib -t copyedited_texfile.tex [-n excess_entries.bib]
       ```
 * * *
