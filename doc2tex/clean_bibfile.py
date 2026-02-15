@@ -69,11 +69,7 @@ cks = ",".join(re.findall(r"\\cite\w*?{(.*?)}", all_tex_text)).split(
 cks2 = ",".join(re.findall(r"\\cite\w*?\[.*?\]{(.*?)}", all_tex_text)).split(
     ","
 )  # for cite* with pre and/or post text
-cks3 = ",".join(re.findall(r"\\cite{(.*?)}", all_tex_text)).split(
-    ","
-)  # for cite without p or t in case authors used those
 cks.extend(cks2)
-cks.extend(cks3)
 cks = [e.lstrip().rstrip().casefold() for e in cks]
 
 # loop items in bibfile and see if the key is in the tex file
