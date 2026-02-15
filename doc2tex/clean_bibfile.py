@@ -3,10 +3,9 @@ import re
 import sys
 from argparse import ArgumentParser
 from collections import OrderedDict
-import sce_utils.utils as scu
 
 import biblib.bib as bbl
-import numpy as np
+import sce_utils.utils as scu
 
 ####
 # check a bibtex file against a tex file and clean out any unused references in the bib file
@@ -20,7 +19,13 @@ import numpy as np
 parser = ArgumentParser()
 parser.add_argument("--bibfile", "-b", type=str, help="path to bib file")
 parser.add_argument("--texfile", "-t", type=str, help="path to tex file")
-parser.add_argument("--nahfile", "-n", type=str, help="path to file for unused entries", default="junk.bib")
+parser.add_argument(
+    "--nahfile",
+    "-n",
+    type=str,
+    help="path to file for unused entries",
+    default="junk.bib",
+)
 args = parser.parse_args()
 
 # make sure there are inputs, warn for overwrite
@@ -29,16 +34,22 @@ assert in_bib is not None, "input bibfile needed (-b)"
 in_tex = args.texfile
 assert in_tex is not None, "input texfile needed (-b)"
 o_clean = in_bib.rstrip(".bib") + "_clean.bib"
-print("output will be in %s (good entries) and %s (unused entries)" % (o_clean, args.nahfile))
+print(
+    "output will be in %s (good entries) and %s (unused entries)"
+    % (o_clean, args.nahfile)
+)
 if os.path.isfile(args.nahfile):
-    input("%s already exists and will be overwritten [hit enter to continue]" % args.nahfile)
+    input(
+        "%s already exists and will be overwritten [hit enter to continue]"
+        % args.nahfile
+    )
 if os.path.isfile(o_clean):
     input("%s already exists and will be overwritten [hit enter to continue]" % o_clean)
 
 # basic check: duplicate bibkeys and items that biblib can't parse
-thing,reason = scu.super_basic_bibcheck(in_bib)
-if reason != 'all clear':
-    print(reason,': ',thing)
+thing, reason = scu.super_basic_bibcheck(in_bib)
+if reason != "all clear":
+    print(reason, ": ", thing)
     sys.exit()
 
 f = open(in_bib, "r")
@@ -52,21 +63,25 @@ bib_rogue = OrderedDict()  # for the entries that are not referenced in the tex
 # read the tex file as one long string
 with open(in_tex, "r") as file:
     all_tex_text = file.read()
-cks = ",".join(re.findall(r"cite.{(.*?)}", all_tex_text)).split(",")  # join and split for individual keys
-cks2 = ",".join(re.findall(r"cite.\[.*?\]{(.*?)}", all_tex_text)).split(",")  # for cite* with pre and/or post text
-cks3 = ",".join(re.findall(r"cite{(.*?)}", all_tex_text)).split(
+cks = ",".join(re.findall(r"\\cite\w*?{(.*?)}", all_tex_text)).split(
+    ","
+)  # join and split for individual keys
+cks2 = ",".join(re.findall(r"\\cite\w*?\[.*?\]{(.*?)}", all_tex_text)).split(
+    ","
+)  # for cite* with pre and/or post text
+cks3 = ",".join(re.findall(r"\\cite{(.*?)}", all_tex_text)).split(
     ","
 )  # for cite without p or t in case authors used those
 cks.extend(cks2)
 cks.extend(cks3)
-cks = [e.lstrip().rstrip() for e in cks]
+cks = [e.lstrip().rstrip().casefold() for e in cks]
 
 # loop items in bibfile and see if the key is in the tex file
 for bibitem in items:
     parser = bbl.Parser()
     q = parser.parse("@" + bibitem)
     key = list(q.get_entries().keys())[0]
-    if key in cks:
+    if key.casefold() in cks:
         bib_used[key] = q.get_entries()[key]
     else:
         bib_rogue[key] = q.get_entries()[key]
