@@ -502,7 +502,7 @@ while True:
                 ftex_out.write(t)
 
     elif line.startswith(r"\end{document"):
-        print(line)
+        print(line + ' reached!')
         ftex_out.write(line)
         break
     else:
