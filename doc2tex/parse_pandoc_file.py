@@ -250,6 +250,7 @@ scount += 1
 
 # deal with the second-language abstract(s) if there are any, using struct
 other_langs = []
+langs = False
 for k in struct.keys():
     if struct[k]['sname'].lower().startswith('second language abs') or struct[k]['sname'].lower().startswith('third language abs'):
         # seek to the line
@@ -291,10 +292,12 @@ for k in struct.keys():
         print('\tparsed non-technical summary')
         summaries[scount] = {"text": nontech, "name": "Non-technical summary", "language": "English"}
         scount += 1
+if len(other_langs) > 0:
+    langs = True
 
 # feed some info to the header setup code
 ftex_out = tt.set_up_header(
-    ftex_out, article_title, authors=authors, affils=affils, credits=credit, other_langs=other_langs, manu=type_of_paper
+    ftex_out, article_title, authors=authors, affils=affils, credits=credit, langs=langs, other_langs=other_langs, manu=type_of_paper
 )
 
 # add abstract(s) after header
