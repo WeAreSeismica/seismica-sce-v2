@@ -152,7 +152,7 @@ affils = {}  # read affiliations that go with those superscripts
 while True:
     line = ftex_in.readline()
     if line.startswith(r"\textsuperscript"):  # is an affiliation
-        groups = re.findall(r"\\textsuperscript{([1-9*]{1,2})}(.*)", line)
+        groups = re.findall(r"\\textsuperscript{([0-9*]{1,2})}(.*)", line)
         sp = groups[0][0]
         pl = groups[0][1].strip()
         try:
