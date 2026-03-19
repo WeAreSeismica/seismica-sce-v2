@@ -152,7 +152,7 @@ affils = {}  # read affiliations that go with those superscripts
 while True:
     line = ftex_in.readline()
     if line.startswith(r"\textsuperscript"):  # is an affiliation
-        groups = re.findall(r"\\textsuperscript{([1-9*]{1,2})}(.*)", line)
+        groups = re.findall(r"\\textsuperscript{([0-9*]{1,2})}(.*)", line)
         sp = groups[0][0]
         pl = groups[0][1].strip()
         try:
@@ -248,61 +248,56 @@ while True:
 summaries[scount] = {"text": abst, "name": "Abstract", "language": "English"}
 scount += 1
 
+# deal with the second-language abstract(s) if there are any, using struct
 other_langs = []
-# deal with the second-language abstract  if there is one
-if line.lower().startswith(r"\section{second language abs"):
-    abs2_dict = {}
-    abs2 = ""
-    hdr = line.split("{")[1].split("}")[0].split(":")[-1].lstrip()  # input line is section header
-    abs2_dict["name"] = hdr.split("(")[0].rstrip()
-    abs2_dict["language"] = hdr.split("(")[-1].split(")")[0].lower()
-    while True:
+langs = False
+for k in struct.keys():
+    if struct[k]['sname'].lower().startswith('second language abs') or struct[k]['sname'].lower().startswith('third language abs'):
+        # seek to the line
+        ftex_in.seek(0)
+        for i in range(struct[k]['line']):
+            line = ftex_in.readline()
         line = ftex_in.readline()
-        if not line.startswith(r"\section"):  # until we hit the next section
-            abs2 = abs2 + line.rstrip()
-        else:
-            break
-        # abs2 = check_non_ascii(abs2)  # try to convert any non-ascii characters
-    abs2_dict["text"] = abs2
-    other_langs.append(abs2_dict["language"])
-    summaries[scount] = abs2_dict
-    scount += 1
 
-# deal with the third-language abstract  if there is one
-if line.lower().startswith(r"\section{third language abs"):
-    abs3_dict = {}
-    abs3 = ""
-    hdr = line.split("{")[1].split("}")[0].split(":")[-1].lstrip()  # input line is section header
-    abs3_dict["name"] = hdr.split("(")[0].rstrip()
-    abs3_dict["language"] = hdr.split("(")[-1].split(")")[0].lower()
-    while True:
+        abs2_dict = {}
+        abs2 = ""
+        hdr = line.split("{")[1].split("}")[0].split(":")[-1].lstrip()  # input line is section header
+        abs2_dict["name"] = hdr.split("(")[0].rstrip()
+        abs2_dict["language"] = hdr.split("(")[-1].split(")")[0].lower()
+        while True:
+            line = ftex_in.readline()
+            if not line.startswith(r"\section"):  # until we hit the next section
+                abs2 = abs2 + line.rstrip()
+            else:
+                break
+            # abs2 = check_non_ascii(abs2)  # try to convert any non-ascii characters
+        print('\tfound %s abstract' % abs2_dict['language'])
+        abs2_dict["text"] = abs2
+        other_langs.append(abs2_dict["language"])
+        summaries[scount] = abs2_dict
+        scount += 1
+    if struct[k]['sname'].lower().startswith("non-technical summary"):
+        ftex_in.seek(0)
+        for i in range(struct[k]['line']):
+            line = ftex_in.readline()
         line = ftex_in.readline()
-        if not line.startswith(r"\section"):  # until we hit the next section
-            abs3 = abs3 + line.rstrip()
-        else:
-            break
-    abs3_dict["text"] = abs3
-    other_langs.append(abs3_dict["language"])
-    summaries[scount] = abs3_dict
-    scount += 1
 
-# parse (English-language) non-technical summary if present
-if line.lower().startswith(r"\section{non-technical summary"):
-    line = ftex_in.readline()  # get past \section
-    nontech = ""
-    while True:
-        line = ftex_in.readline()
-        if not line.startswith(r"\section"):
-            nontech = nontech + line.rstrip()
-        else:
-            break
-    summaries[scount] = {"text": nontech, "name": "Non-technical summary", "language": "English"}
-    scount += 1
-
+        nontech = ""
+        while True:
+            line = ftex_in.readline()
+            if not line.startswith(r"\section"):
+                nontech = nontech + line.rstrip()
+            else:
+                break
+        print('\tparsed non-technical summary')
+        summaries[scount] = {"text": nontech, "name": "Non-technical summary", "language": "English"}
+        scount += 1
+if len(other_langs) > 0:
+    langs = True
 
 # feed some info to the header setup code
 ftex_out = tt.set_up_header(
-    ftex_out, article_title, authors=authors, affils=affils, credits=credit, other_langs=other_langs, manu=type_of_paper
+    ftex_out, article_title, authors=authors, affils=affils, credits=credit, langs=langs, other_langs=other_langs, manu=type_of_paper
 )
 
 # add abstract(s) after header
@@ -510,7 +505,7 @@ while True:
                 ftex_out.write(t)
 
     elif line.startswith(r"\end{document"):
-        print(line)
+        print(line + ' reached!')
         ftex_out.write(line)
         break
     else:

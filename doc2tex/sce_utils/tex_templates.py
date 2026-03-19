@@ -26,7 +26,11 @@ def set_up_header(
     if anon:
         docops += "anonymous,"
     if langs:
-        docops += "languages,"
+        docops += "languages={"
+        for l in other_langs:
+            docops += "%s," % l
+        docops = docops[:-1]
+        docops += "},"
     if breakmath:
         docops += "breakmath,"
     if preprint:
@@ -52,6 +56,17 @@ def set_up_header(
 
     docops = docops[:-1]  # remove trailing comma
 
+    # some non-Latin fonts that may be needed:
+    lang_string = """
+% Languages
+% Specific fonts need to be imported for languages that do not use latin alphabet.
+% For each language, you can have a look at the babel doc (https://texdoc.org/serve/babel/0, section 1.7) and click on the reference mark (※) to open a specific site for each language with examples.
+\\babelfont[japanese]{rm}{Harano Aji Mincho}
+\\babelfont[japanese]{sf}{Harano Aji Mincho}
+\\babelfont[arabic]{rm}{FreeSerif}
+\\babelfont[arabic]{sf}{FreeSerif}
+"""
+
     header1 = (
         """% Seismica Publication Template
 % LuaLatex
@@ -59,12 +74,13 @@ def set_up_header(
 %! TEX TS-program = lualatex
 %! TEX encoding = UTF-8 Unicode
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% options: report, breakmath, proof, onecolumn, invited, opinion
+% options: report, breakmath, proof, onecolumn, invited, opinion, languages
 \\documentclass["""
         + docops
         + """]{seismica} 
 """
-        + report_string
+        + report_string + "\n"
+        + lang_string
         + """
 % SCE team metadata:
 \\dois{10.26443/seismica.v0i0.N}
@@ -117,21 +133,6 @@ def set_up_header(
         fout.write("\\credit{" + k + "}{" + credits[k] + "}\n")
     fout.write("\n")
 
-    if len(other_langs) > 0:
-        header2 = """\\setotherlanguages{"""
-        for l in other_langs:
-            header2 += "%s," % l
-        header2 = header2[:-1]
-        header2 += """}\n
-%% Do not put arabic in \\setotherlanguages{} as it is not supported by polyglossia
-%% Instead, use these commands within the text:
-%%\\begin{Arabic} and \\end{Arabic} around paragraphs in Arabic
-%%\\n{} to wrap any digits within Arabic text that should read left-to-right
-%%\\textarabic{} for Arabic text embedded in a left-to-right paragraph
-
-"""
-        fout.write(header2)
-
     fout.write("\\begin{document}")
 
     return fout
@@ -147,11 +148,11 @@ def add_abstracts(fout, summaries):
         abst = summaries[k]
         toadd = ""
         if abst["language"] != "English":
-            toadd += "\\begin{%s}\n" % abst["language"]
+            toadd += "\\begin{selectlanguage}{%s}\n" % abst["language"]
         toadd += "\\begin{summary}{%s}\n" % abst["name"]
         toadd += "%s\n\\end{summary}\n" % abst["text"]
         if abst["language"] != "English":
-            toadd += "\\end{%s}\n" % abst["language"]
+            toadd += "\\end{selectlanguage}\n"
         towrite += toadd
 
     towrite += "}\n"
