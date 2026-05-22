@@ -136,7 +136,7 @@ def document_structure(ftex_in):
             if line.split("{")[1].strip()[0].isdigit():  # try to remove numbering
                 sname = " ".join(line.split("{")[1].split("}")[0].split(" ")[1:])
             else:
-                sname = line.split("{")[1].split("}")[0]
+                sname = line.split("{")[1].split("}")[0].strip()
             sect = {"sname": sname, "level": line.split("{")[0][1:], "line": i}
             struct[j] = sect
             j += 1
