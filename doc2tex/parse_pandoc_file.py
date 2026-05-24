@@ -154,7 +154,7 @@ while True:
     if line.startswith(r"\textsuperscript"):  # is an affiliation
         groups = re.findall(r"\\textsuperscript{([0-9*]{1,2})}(.*)", line)
         sp = groups[0][0]
-        pl = groups[0][1].strip()
+        pl = groups[0][1].strip().rstrip('.')
         try:
             affils[int(sp)] = {"super": sp, "place": pl}
         except ValueError:  # probably a superscript asterisk
